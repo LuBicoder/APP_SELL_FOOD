@@ -30,7 +30,7 @@ jobs:
         buildozer android debug
 
     - name: Upload APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: apk
         path: App_Sell_Food_APK/bin/*.apk

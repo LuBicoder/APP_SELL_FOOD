@@ -5,7 +5,7 @@ package.name = foodapp
 package.domain = org.test
 
 source.dir = .
-source.include_exts = py,png,jpg
+source.include_exts = py,png,jpg,kv
 
 version = 1.0
 
@@ -15,10 +15,7 @@ orientation = portrait
 
 fullscreen = 0
 
-# thêm dòng này để GitHub tự chấp nhận license
 android.accept_sdk_license = True
-
-# thêm cấu hình Android để tránh lỗi build tools
 android.api = 33
 android.minapi = 21
 android.ndk = 25b

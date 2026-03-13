@@ -9,15 +9,21 @@ source.include_exts = py,png,jpg,kv
 
 version = 1.0
 
-requirements = python3,kivy
+requirements = python3,kivy==2.2.1
 
 orientation = portrait
 fullscreen = 0
 
-android.api = 31
+# Android config
+android.api = 33
 android.minapi = 21
 android.ndk = 25b
+android.archs = arm64-v8a
+
 android.accept_sdk_license = True
+
+# Fix lỗi build phổ biến
+p4a.bootstrap = sdl2
 
 [buildozer]
 

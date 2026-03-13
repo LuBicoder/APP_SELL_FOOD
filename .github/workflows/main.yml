@@ -42,4 +42,3 @@ steps:
   with:
     name: foodapp-apk
     path: App_Sell_Food_APK/bin/*.apk
-```

@@ -8,11 +8,12 @@ jobs:
 build:
 runs-on: ubuntu-22.04
 
+```
 steps:
-  - name: Checkout
+  - name: Checkout source
     uses: actions/checkout@v4
 
-  - name: Setup Java
+  - name: Setup Java 17
     uses: actions/setup-java@v4
     with:
       distribution: temurin
@@ -27,13 +28,33 @@ steps:
     run: |
       sudo apt update
       sudo apt install -y \
-      git zip unzip \
-      python3-pip build-essential \
-      autoconf automake libtool pkg-config \
-      zlib1g-dev libncurses5-dev libncursesw5-dev \
-      cmake libffi-dev libssl-dev
+        git zip unzip \
+        python3-pip build-essential \
+        autoconf automake libtool pkg-config \
+        zlib1g-dev libncurses5-dev libncursesw5-dev \
+        cmake libffi-dev libssl-dev
 
-  - name: Install python packages
+  - name: Install Android SDK
+    run: |
+      mkdir -p $HOME/android-sdk/cmdline-tools
+      cd $HOME/android-sdk/cmdline-tools
+      wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
+      unzip commandlinetools-linux-10406996_latest.zip
+      mv cmdline-tools latest
+
+  - name: Setup Android environment
+    run: |
+      echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+      echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+      echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+      echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+
+  - name: Accept licenses and install SDK packages
+    run: |
+      yes | sdkmanager --licenses
+      sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+
+  - name: Install Python packages
     run: |
       pip install --upgrade pip
       pip install buildozer cython
@@ -41,11 +62,11 @@ steps:
   - name: Build APK
     run: |
       cd App_Sell_Food_APK
-      buildozer -v android debug
+      buildozer android debug
 
   - name: Upload APK
     uses: actions/upload-artifact@v4
     with:
       name: foodapp-apk
       path: App_Sell_Food_APK/bin/*.apk
-
+```

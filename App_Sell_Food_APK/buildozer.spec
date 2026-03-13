@@ -15,14 +15,18 @@ orientation = portrait
 fullscreen = 0
 
 # Android config
+
 android.api = 33
 android.minapi = 21
-android.ndk = 25b
+
+android.ndk = 25c
+android.ndk_api = 21
 android.archs = arm64-v8a
 
 android.accept_sdk_license = True
 
-# Fix lỗi build phổ biến
+# Kivy bootstrap
+
 p4a.bootstrap = sdl2
 
 [buildozer]

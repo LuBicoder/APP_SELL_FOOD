@@ -8,12 +8,12 @@ jobs:
 build:
 runs-on: ubuntu-22.04
 
-
+```
 steps:
   - name: Checkout source
     uses: actions/checkout@v4
 
-  - name: Setup Java 17
+  - name: Setup Java
     uses: actions/setup-java@v4
     with:
       distribution: temurin
@@ -34,26 +34,6 @@ steps:
         zlib1g-dev libncurses5-dev libncursesw5-dev \
         cmake libffi-dev libssl-dev
 
-  - name: Install Android SDK
-    run: |
-      mkdir -p $HOME/android-sdk/cmdline-tools
-      cd $HOME/android-sdk/cmdline-tools
-      wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
-      unzip commandlinetools-linux-10406996_latest.zip
-      mv cmdline-tools latest
-
-  - name: Setup Android environment
-    run: |
-      echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-      echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
-      echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-      echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
-
-  - name: Accept licenses and install SDK packages
-    run: |
-      yes | sdkmanager --licenses
-      sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
-
   - name: Install Python packages
     run: |
       pip install --upgrade pip
@@ -62,11 +42,11 @@ steps:
   - name: Build APK
     run: |
       cd App_Sell_Food_APK
-      buildozer android debug
+      buildozer -v android debug
 
   - name: Upload APK
     uses: actions/upload-artifact@v4
     with:
       name: foodapp-apk
       path: App_Sell_Food_APK/bin/*.apk
-
+```

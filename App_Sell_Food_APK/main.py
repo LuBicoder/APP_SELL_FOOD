@@ -1,203 +1,273 @@
+
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.image import Image
-from kivy.graphics import Rectangle
+from kivy.uix.textinput import TextInput
+from kivy.uix.widget import Widget
+from kivy.graphics import Rectangle, Color
+from kivy.uix.popup import Popup
+
 
 menu = {
-    "Bánh mì": {"Giá": 3000, "img": "images/banhmi.png"},
-    "Hủ tiếu": {"Giá": 30000, "img": "images/hutieu.png"},
-    "Bún riêu": {"Giá": 30000, "img": "images/bunrieu.png"},
-    "Cháo": {"Giá": 20000, "img": "images/chao.png"}
+    "Bánh mì": {"small": 3000,"large":3000, "img": "images/banhmi.png"},
+    "Hủ tiếu": {"small": 25000, "large": 30000, "img": "images/hutieu.png"},
+    "Bún riêu": {"small": 25000, "large": 30000, "img": "images/bunrieu.png"},
+    "Cháo": {"small": 20000, "large": 23000, "img": "images/chao.png"}
 }
 
 
-class OrderApp(App):
+class Divider(Widget):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        with self.canvas:
+            Color(1,1,1,0.6)
+            self.rect = Rectangle(pos=self.pos, size=self.size)
+
+        self.bind(pos=self.update,size=self.update)
+
+    def update(self,*args):
+
+        self.rect.pos=self.pos
+        self.rect.size=self.size
+
+
+class POSApp(App):
 
     def build(self):
 
-        self.order = {}
-        self.total = 0
-        self.history = []
+        self.order={}
+        self.total=0
 
-        root = BoxLayout(orientation="horizontal")
+        root=BoxLayout(orientation="horizontal")
 
         # ===== BACKGROUND =====
         with root.canvas.before:
-            self.bg = Rectangle(
+            self.bg=Rectangle(
                 source="images/background.jpg",
                 pos=root.pos,
                 size=root.size
             )
 
-        root.bind(size=self.update_bg, pos=self.update_bg)
+        root.bind(size=self.update_bg,pos=self.update_bg)
 
         # ===== MENU =====
-        menu_layout = GridLayout(cols=1, spacing=10, size_hint_y=None)
-        menu_layout.bind(minimum_height=menu_layout.setter("height"))
+        left=BoxLayout(
+            orientation="vertical",
+            size_hint_x=0.6,
+            padding=10
+        )
+
+        title=Label(
+            text="MENU",
+            size_hint_y=0.1,
+            color=(1,1,0,1),
+            font_size = 32,
+            bold = True
+        )
+
+        left.add_widget(title)
+
+        scroll=ScrollView()
+
+        grid=GridLayout(
+            cols=3,
+            spacing=10,
+            size_hint_y=None
+        )
+
+        grid.bind(minimum_height=grid.setter("height"))
 
         for item in menu:
 
-            box = BoxLayout(size_hint_y=None, height=90)
-
-            img = Image(
-                source=menu[item]["img"],
-                size_hint_x=0.3
+            box=BoxLayout(
+                orientation="vertical",
+                size_hint_y=None,
+                height=180
             )
 
-            label = Label(
-                text=item,
-                color=(1, 1, 0, 1)
+            img_btn=Button(
+                background_normal=menu[item]["img"],
+                background_down=menu[item]["img"]
             )
 
-            btn_add = Button(text="+", size_hint_x=0.2)
-            btn_remove = Button(text="-", size_hint_x=0.2)
+            img_btn.bind(on_press=lambda x,i=item:self.choose_size(i))
 
-            btn_add.bind(on_press=lambda x, i=item: self.add_item(i))
-            btn_remove.bind(on_press=lambda x, i=item: self.remove_item(i))
+            name=Label(text=item,size_hint_y=0.3)
 
-            box.add_widget(img)
-            box.add_widget(label)
-            box.add_widget(btn_add)
-            box.add_widget(btn_remove)
+            box.add_widget(img_btn)
+            box.add_widget(name)
 
-            menu_layout.add_widget(box)
+            grid.add_widget(box)
 
-        scroll = ScrollView(size_hint_x=0.4)
-        scroll.add_widget(menu_layout)
+        scroll.add_widget(grid)
+
+        left.add_widget(scroll)
+
+        # ===== DIVIDER =====
+        divider=Divider(size_hint_x=0.01)
 
         # ===== BILL =====
-        bill_layout = BoxLayout(
+        right=BoxLayout(
             orientation="vertical",
-            size_hint_x=0.3
+            size_hint_x=0.39,
+            padding=10,
+            spacing=10
         )
 
-        self.bill_label = Label(
+        bill_title=Label(
+            text="HÓA ĐƠN",
+            size_hint_y=0.1,
+            color=(0,1,0,1),
+            font_size = 32,
+            bold = True
+        )
+
+        self.bill_label=Label(
             text="Chưa có món",
-            color=(1, 1, 1, 1)
+            halign="left",
+            valign="top"
         )
 
-        self.money_input = TextInput(
+        self.note_input=TextInput(
+            hint_text="Ghi chú đơn hàng...",
+            size_hint_y=0.15
+        )
+
+        self.money_input=TextInput(
             hint_text="Tiền khách đưa",
-            size_hint_y=None,
-            height=40,
-            multiline=False
+            multiline=False,
+            size_hint_y=0.1
         )
 
-        pay_btn = Button(
-            text="Thanh toán",
-            size_hint_y=None,
-            height=80
+        self.total_label=Label(
+            text="Tổng tiền: 0đ",
+            size_hint_y=0.1,
+            color=(1,0,0,1),
+            font_size = 28,
+            bold = True
         )
 
-        pay_btn.bind(on_press=self.calculate)
-
-        self.result_label = Label(
-            text="Tổng: 0",
-            color=(1, 0, 0, 1)
+        pay_btn=Button(
+            text="YÊU CẦU THANH TOÁN",
+            size_hint_y=0.15
         )
 
-        bill_layout.add_widget(self.bill_label)
-        bill_layout.add_widget(self.money_input)
-        bill_layout.add_widget(pay_btn)
-        bill_layout.add_widget(self.result_label)
+        pay_btn.bind(on_press=self.pay)
 
-        # ===== HISTORY =====
-        history_layout = BoxLayout(
-            orientation="vertical",
-            size_hint_x=0.3
-        )
+        right.add_widget(bill_title)
+        right.add_widget(self.bill_label)
+        right.add_widget(self.note_input)
+        right.add_widget(self.money_input)
+        right.add_widget(self.total_label)
+        right.add_widget(pay_btn)
 
-        history_title = Label(
-            text="Lịch sử đơn",
-            color=(0, 1, 0, 1)
-        )
-
-        self.history_label = Label(
-            text="Chưa có đơn",
-            halign="left"
-        )
-
-        history_layout.add_widget(history_title)
-        history_layout.add_widget(self.history_label)
-
-        root.add_widget(scroll)
-        root.add_widget(bill_layout)
-        root.add_widget(history_layout)
+        root.add_widget(left)
+        root.add_widget(divider)
+        root.add_widget(right)
 
         return root
 
-    def update_bg(self, *args):
-        self.bg.pos = self.root.pos
-        self.bg.size = self.root.size
 
-    def add_item(self, item):
+    # ===== BACKGROUND =====
+    def update_bg(self,*args):
 
-        self.order[item] = self.order.get(item, 0) + 1
+        self.bg.pos=self.root.pos
+        self.bg.size=self.root.size
+
+
+    # ===== SIZE POPUP =====
+    def choose_size(self,item):
+
+        layout=BoxLayout()
+
+        btn_small=Button(text="Nhỏ")
+        btn_large=Button(text="Lớn")
+
+        layout.add_widget(btn_small)
+        layout.add_widget(btn_large)
+
+        popup=Popup(
+            title="Chọn size",
+            content=layout,
+            size_hint=(0.5,0.3)
+        )
+
+        btn_small.bind(on_press=lambda x:self.add_item(item,"small"))
+        btn_large.bind(on_press=lambda x:self.add_item(item,"large"))
+
+        btn_small.bind(on_press=popup.dismiss)
+        btn_large.bind(on_press=popup.dismiss)
+
+        popup.open()
+
+
+    # ===== ADD ITEM =====
+    def add_item(self,item,size):
+
+        key=f"{item}_{size}"
+
+        self.order[key]=self.order.get(key,0)+1
+
         self.update_bill()
 
-    def remove_item(self, item):
 
-        if item in self.order:
-
-            self.order[item] -= 1
-
-            if self.order[item] <= 0:
-                del self.order[item]
-
-        self.update_bill()
-
+    # ===== UPDATE BILL =====
     def update_bill(self):
 
-        text = ""
-        total = 0
+        text=""
+        total=0
 
-        for item, qty in self.order.items():
+        for key,qty in self.order.items():
 
-            price = menu[item]["Giá"]
+            item,size=key.split("_")
 
-            total += price * qty
+            price=menu[item][size]
 
-            text += f"{item} x{qty} = {price*qty}đ\n"
+            size_name="Nhỏ" if size=="small" else "Lớn"
 
-        self.total = total
+            total+=price*qty
 
-        if text == "":
-            text = "Chưa có món"
+            text+=f"{item} ({size_name}) x{qty}   {price*qty}đ\n"
 
-        self.bill_label.text = text
+        if text=="":
+            text="Chưa có món"
 
-    def calculate(self, instance):
+        self.total=total
+
+        self.bill_label.text=text
+        self.total_label.text=f"Tổng tiền: {total}đ"
+
+
+    # ===== PAYMENT =====
+    def pay(self,instance):
 
         try:
-            customer = int(self.money_input.text)
+            money=int(self.money_input.text)
         except:
-            customer = 0
+            money=0
 
-        change = customer - self.total
+        change=money-self.total
 
-        self.result_label.text = f"Tổng: {self.total}đ\nTiền thừa: {change}đ"
+        note=self.note_input.text
 
-        # ===== LƯU LỊCH SỬ =====
-        order_text = ""
+        print("===== HÓA ĐƠN =====")
+        print(self.bill_label.text)
+        print("Ghi chú:",note)
+        print("Tiền khách:",money)
+        print("Tiền thừa:",change)
 
-        for item, qty in self.order.items():
-            order_text += f"{item} x{qty} | Đã thanh toán\n"
+        self.total_label.text=f"Tổng: {self.total}đ | Tiền thừa: {change}đ"
 
-        if order_text != "":
-            self.history.append(order_text)
-
-        self.history_label.text = "\n".join(self.history)
-
-        # Reset hóa đơn
-        self.order = {}
-        self.bill_label.text = "Chưa có món"
-        self.money_input.text = ""
-        self.total = 0
+        self.order={}
+        self.bill_label.text="Chưa có món"
+        self.note_input.text=""
+        self.money_input.text=""
+        self.total=0
 
 
-OrderApp().run()
+POSApp().run()
